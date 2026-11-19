@@ -35,6 +35,8 @@ export default function AdminPage() {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setReady(true);
+    }).catch(() => {
+      setReady(true);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => data.subscription.unsubscribe();
