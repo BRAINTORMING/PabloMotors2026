@@ -61,6 +61,7 @@ export function VehiclesPanel({ marcas, tipos, combustibles, etiquetas }: Props)
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'error' | 'ok'; text: string } | null>(null);
   const [query, setQuery] = useState('');
+  const [dragging, setDragging] = useState(false);
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -235,7 +236,22 @@ export function VehiclesPanel({ marcas, tipos, combustibles, etiquetas }: Props)
               </Button>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragging(false);
+                upload(e.dataTransfer.files?.[0]);
+              }}
+              className={cn(
+                'flex flex-col items-center gap-4 rounded-xl border-2 border-dashed p-4 transition-colors sm:flex-row',
+                dragging ? 'border-info bg-info/10' : 'border-line',
+              )}
+            >
               <div className="h-24 w-36 shrink-0 overflow-hidden rounded-xl border border-line bg-sunken">
                 {form.foto_url ? (
                   <img src={form.foto_url} alt="Foto del vehículo" className="h-full w-full object-cover" />
@@ -243,13 +259,16 @@ export function VehiclesPanel({ marcas, tipos, combustibles, etiquetas }: Props)
                   <div className="flex h-full items-center justify-center text-xs text-muted">Sin foto</div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 text-center sm:text-left">
+                <p className="text-sm font-medium">
+                  {dragging ? 'Suelta la imagen aquí' : 'Arrastra una foto aquí o'}
+                </p>
                 <label className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-sunken focus-within:ring-2 focus-within:ring-info">
-                  {busy ? 'Subiendo…' : form.foto_url ? 'Cambiar foto' : 'Subir foto'}
+                  {busy ? 'Subiendo…' : form.foto_url ? 'Cambiar foto' : 'Elegir archivo'}
                   <input type="file" accept="image/*" className="sr-only" disabled={busy} onChange={(e) => upload(e.target.files?.[0])} />
                 </label>
                 {form.foto_url && (
-                  <button type="button" className="block text-xs text-danger hover:underline" onClick={() => set('foto_url', null)}>
+                  <button type="button" className="block w-full text-xs text-danger hover:underline sm:w-auto" onClick={() => set('foto_url', null)}>
                     Quitar foto
                   </button>
                 )}
